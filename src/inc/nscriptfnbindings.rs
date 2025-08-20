@@ -1,0 +1,102 @@
+use crate::*;
+// wrapped function to include all rustfn at once in main()
+pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
+    nscript.insertfn("setcamerapos",nscriptfn_setcamerapos,"setcamerapos(objectid,x:float,y:float,z:float)");
+    nscript.insertfn("objectsetposition",nscriptfn_objectsetposition,"objectsetposition(objectid,x:float,y:float,z:float)");
+    nscript.insertfn("objectsetrotation",nscriptfn_objectsetrotation,"objectsetrotation(objectid,x:float,y:float,z:float)");
+    nscript.insertfn("objectsetscale",nscriptfn_objectsetscale,"objectsetscale(objectid,x:float,y:float,z:float)");
+    nscript.insertfn("cube",nscriptfn_cube,"cube(objectid,x:float,y:float,z:float) // returns objectid , spawns a cube in 3d");
+    nscript.insertfn("triangle",nscriptfn_triangle,"triangle(objectid,x:float,y:float,z:float) // returns objectid , spawns a triangle in 3d");
+    nscript.insertfn("square",nscriptfn_square,"square(objectid,x:float,y:float,z:float) // returns objectid , spawns a square in 3d");
+    nscript.insertfn("loadtexture",nscriptfn_loadtexture,"loadtexture(filepath) // returns filepath");
+    nscript.insertfn("settexture",nscriptfn_settexture,"settexture(objectid,filepath) // returns filepath");
+    nscript.insertfn("objectremove",nscriptfn_objectremove,"objectremove(objectid) // returns objectid");
+    nscript.insertfn("loadsprite",nscriptfn_loadsprite,"loadsprite(sprite_dir) // returns spriteid");
+    nscript.insertfn("addsprite",nscriptfn_allspritesadd,"addsprite(sprite_object) // adds to the all sprite index for changes");
+    nscript.insertfn("removesprite",nscriptfn_allspritesremove,"removesprite(sprite_object) // removes a sprite from the index");
+    nscript.insertfn("spritesetanimation",nscriptfn_spritesetanimation,"spritesetanimation(sprite_object,animationname) // sets a new row of sprites to a object");
+    nscript.insertfn("allsprites",nscriptfn_allsprites,"allsprites() // returns a vector with all sprites");
+}
+
+pub fn nscriptfn_setcamerapos(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let var = storage.getvar(&args[1], block);
+     storage.objectsetprop(&name,"x",var);
+    let var = storage.getvar(&args[2], block);
+     storage.objectsetprop(&name,"y",var);
+    let var = storage.getvar(&args[3], block);
+     storage.objectsetprop(&name,"z",var);
+
+    let var = storage.getvar(&args[4], block);
+     storage.objectsetprop(&name,"targetx",var);
+    let var = storage.getvar(&args[5], block);
+     storage.objectsetprop(&name,"targety",var);
+    let var = storage.getvar(&args[6], block);
+     storage.objectsetprop(&name,"targetz",var);
+    storage.customdata.static_vec_bool[Q_CAMERA] = true;
+    NscriptVar::new("camera")
+}
+pub fn nscriptfn_objectsetposition(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_POSITION].push((name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_objectsetrotation(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_ROTATION].push((name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_objectsetscale(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_SCALE].push((name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_square(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_SQUARE].push((name.to_string(),x,y,z));
+    NscriptVar::newstring("v",name)
+}
+pub fn nscriptfn_triangle(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_TRIANGLE].push((name.to_string(),x,y,z));
+    NscriptVar::newstring("v",name)
+}
+pub fn nscriptfn_cube(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = Nstring::f32(&storage.getargstring(&args[1], block));
+    let y = Nstring::f32(&storage.getargstring(&args[2], block));
+    let z = Nstring::f32(&storage.getargstring(&args[3], block));
+    storage.customdata.static_vec_vec_string_vector3_32[Q_CUBE].push((name.to_string(),x,y,z));
+    NscriptVar::newstring("v",name)
+}
+pub fn nscriptfn_loadtexture(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    storage.customdata.static_vec_vec_string[Q_LOADTEXTURE].push(name.to_string());
+    NscriptVar::newstring("v",name)
+}
+pub fn nscriptfn_settexture(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let path = storage.getargstring(&args[1], block);
+    storage.customdata.static_vec_vec_vec_string[Q_SETTEXTURE].push(vec!(name,path.to_string()));
+    NscriptVar::newstring("v",path)
+}
+pub fn nscriptfn_objectremove(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    storage.customdata.static_vec_vec_string[Q_DELETE].push(name.to_string());
+    NscriptVar::newstring("v",name)
+}
