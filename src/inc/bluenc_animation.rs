@@ -36,7 +36,7 @@ impl BluencAnimation{
         let vect = &storage.customdata.static_vec_vec_string[BNC_ALLANIMS];
         let qmax =vect.len();
         if qmax>0{
-            let mut topos = self.animationcounter + 20;
+            let mut topos = self.animationcounter + 25;
             if topos > qmax {
                 topos = qmax.clone()+ 1;
             }

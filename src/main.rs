@@ -51,25 +51,28 @@ pub const Q_DELETE: usize= 10;
 pub const Q_ANIMATION: usize= 11;
 pub const BNC_SQUARE_Q: usize = 1;
 pub const BNC_ALLANIMS: usize = 12;
+pub const Q_CUSTOMMODELS: usize = 13;
 pub struct BlueNc{
-    name:String,
+    //name:String,
     keyvec:Vec<blue_engine::KeyCode>,
     keynames:Vec<Box<str>>,
     codeblock:NscriptCodeBlock,
     textures:BluencTextures,
     objects:BluencObjects,
     animation:BluencAnimation,
+    batchedmodels:BatchedModels,
 }
 impl BlueNc{
     pub fn new()->BlueNc{
         let mut this = BlueNc{
-            name:"oi".to_string(),
+            //name:"oi".to_string(),
             keyvec: Vec::new(),
             keynames: Vec::new(),
             codeblock: NscriptCodeBlock::new("BlueNc"),
             textures: BluencTextures::new(),
             objects: BluencObjects::new(),
             animation: BluencAnimation::new(),
+            batchedmodels: BatchedModels::new(),
         };
         let keyvec = [
             blue_engine::KeyCode::Escape,
@@ -301,13 +304,13 @@ fn main() {
     //{
     // Initialize the engine with default settings
     let mut nscript = Nscript::new();
-for x in 0..30{
+for _x in 0..30{
         nscript.storage.customdata.static_vec_vec_string.push(Vec::new());
         nscript.storage.customdata.static_vec_vec_vec_string.push(Vec::new());
         nscript.storage.customdata.static_vec_vec_string_vector3_32.push(Vec::new());
         nscript.storage.customdata.static_vec_string.push("".to_string());
         nscript.storage.customdata.static_vec_bool.push(false);
-        print(&x.to_string(),"br");
+        //print(&x.to_string(),"br");
     }
     nscript.parsefile("settings.nc");
     //let mut engine = Engine::new().expect("win");
@@ -345,8 +348,8 @@ for x in 0..30{
     let script = nscript.storage.getglobal("$cmdarg1").stringdata;
     nscript.parsefile(&script);
     //textures = BluencTextures::new();
-let filepath = "assets/blood.png";
-    bnc.textures.load(&mut engine, &filepath);
+// let filepath = "assets/blood.png";
+//     bnc.textures.load(&mut engine, &filepath);
 
     //bnc_objects.cube(&mut engine, "triangle").settexture(&mut engine,"triangle","assets/blood.png",&mut bnc.textures);
 //let  obj = bnc.objects.getobject("triangle");
@@ -396,7 +399,7 @@ let filepath = "assets/blood.png";
                 BluencCamera::queehandler(&mut engine.camera,&mut nscript.storage);
 
                 bnc.objects.q_handler(engine,&mut nscript.storage,&mut bnc.textures);
-
+bnc.batchedmodels.q_handler(engine, &mut bnc.objects,&mut bnc.textures, &mut nscript.storage);
                 bnc.animation.q_handler(engine,&mut nscript.storage);
                 // obtain the plugin
                 // let egui_plugin = engine
@@ -424,11 +427,11 @@ let filepath = "assets/blood.png";
                 //     &engine.window,
                 // );
 bnc.getkeyevents(&mut engine.simple_input, &mut nscript.storage);
-        if &nscript.storage.getglobal("$testtriangle").stringdata == "go"{
-
-                    triangle("asd",ObjectSettings::default(),&mut engine.renderer, &mut engine.objects).unwrap();
-                    nscript.storage.setglobal("$testtriangle", NscriptVar::new("v"));
-                }
+        // if &nscript.storage.getglobal("$testtriangle").stringdata == "go"{
+        //
+        //             triangle("asd",ObjectSettings::default(),&mut engine.renderer, &mut engine.objects).unwrap();
+        //             nscript.storage.setglobal("$testtriangle", NscriptVar::new("v"));
+        //         }
         }else{
             print("Exit; no more coroutines running!","red");
                process::exit(1);

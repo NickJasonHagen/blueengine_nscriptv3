@@ -16,6 +16,15 @@ pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
     nscript.insertfn("removesprite",nscriptfn_allspritesremove,"removesprite(sprite_object) // removes a sprite from the index");
     nscript.insertfn("spritesetanimation",nscriptfn_spritesetanimation,"spritesetanimation(sprite_object,animationname) // sets a new row of sprites to a object");
     nscript.insertfn("allsprites",nscriptfn_allsprites,"allsprites() // returns a vector with all sprites");
+    nscript.insertfn("batchedmodel_modelspawn",nscriptfn_batchedmodel_modelspawn,"batchedmodel_modelspawn(newobjecid,modelfile) // spawns a batchedmodel from a file");
+    nscript.insertfn("batchedmodel_spawntobuffer",nscriptfn_batchedmodel_spawntobuffer,"batchedmodel_spawntobuffer(texture,x,y,z,rx,ry,rz,sx,sy,sz,shape_as_string) // spawns a model to a buffer, shape:cube,triangle,square ,spawn with spawnfrombuffer");
+    nscript.insertfn("batchedmodel_spawnfrombuffer",nscriptfn_batchedmodel_spawnfrombuffer,"batchedmodel_spawnfrombuffer(newobjectid,buffer) //returns objectid,  spawns a model from a buffer");
+    nscript.insertfn("batchedmodel_buildfromfile",nscriptfn_batchedmodel_buildfromfile,"batchedmodel_buildfromfile(file) //returns objectid,  preloads a file, uses the filename as objectreference : use with spawnfrombuffer()");
+    nscript.insertfn("batchedmodel_setposition",nscriptfn_batchedmodel_setposition,"batchedmodel_setposition(object,x,y,z) // adjusts the objects matrix");
+    nscript.insertfn("batchedmodel_setrotation",nscriptfn_batchedmodel_setrotation,"batchedmodel_setrotation(object,x,y,z) // adjusts the objects matrix");
+    nscript.insertfn("batchedmodel_setscale",nscriptfn_batchedmodel_setscale,"batchedmodel_setscale(object,x,y,z) // adjusts the objects matrix");
+    nscript.insertfn("batchedmodel_delete",nscriptfn_batchedmodel_delete,"batchedmodel_delete(object) //  deletes the objects matrix");
+    nscript.insertfn("batchedmodel_modelbuffertofile",nscriptfn_batchedmodel_modelbuffertofile,"batchedmodel_modelbuffertofile(buffer,file) //  buffer to file");
 }
 
 pub fn nscriptfn_setcamerapos(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{

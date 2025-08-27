@@ -4,11 +4,37 @@
 // texture and the system will return a array of created identifiers so you can adjust move and
 // rotate them as a group at your end !
 use crate::*;
+use blue_engine::{
+    ObjectStorage, Renderer,Object,
+    prelude::{ObjectSettings,  Vertex},
+};
 use cgmath::{Matrix4, Vector3,Transform, Quaternion, Euler, Deg, Point3};
 use std::io::{ Write};
 use std::{fs, usize};
 //use std::path::Path;
 use std::fs::File;
+
+pub fn batchedmodel(
+    name: impl AsRef<str>,
+    vertices:Vec<Vertex>,
+    indices:Vec<u16>,
+    settings: ObjectSettings,
+    renderer: &mut Renderer,
+    objects: &mut ObjectStorage,
+)  {
+    objects.insert(
+        name.as_ref().into(),
+        Object::new(
+            name,
+            vertices,
+            indices,
+            settings,
+            renderer,
+        ).unwrap(),
+    );
+
+    //Ok(())
+}
 pub struct BatchedModels{
     //availible shapes defaults
     vertices_square: std::vec::Vec<blue_engine::Vertex>,
@@ -26,6 +52,149 @@ pub struct BatchedModels{
 
 }
 impl BatchedModels{
+    pub fn q_handler(&mut self, engine:&mut blue_engine::Engine,objects:&mut BluencObjects,textures:&mut BluencTextures,storage:&mut NscriptStorage){
+        let qbuffer = &storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].clone();//self.vmap.getstringarray("blueengine.square_q");
+        if qbuffer.len() != 0 {
+            for modeldata in qbuffer{//NC_ARRAY_DELIM
+
+                //if  i != ""{
+                //let modeldata = split(&i,",");
+                if modeldata.len() > 0{
+                    match modeldata[0].as_str() {
+                        "buildmodelfromfile" => {
+                            self.buildmodelfromfile(&modeldata[1]);
+                        }
+                        "modelspawntobuffer" => {
+                            if modeldata.len() > 11{
+                                self.spawntobuffer(&modeldata[1],
+                                    &modeldata[2],
+                                    &Nstring::f32(&modeldata[3]),&Nstring::f32(&modeldata[4]),&Nstring::f32(&modeldata[5]),
+                                    &Nstring::f32(&modeldata[6]),&Nstring::f32(&modeldata[7]),&Nstring::f32(&modeldata[8]),
+                                    &Nstring::f32(&modeldata[9]),&Nstring::f32(&modeldata[10]),&Nstring::f32(&modeldata[11])
+                                );
+                            }
+                        }
+
+                        "modelspawnfrombuffer" =>{
+                            let (modelvertices,modelindices,modeltextures) = self.spawnmodelfrombuffer(&modeldata[1]);
+                            let todo = modelvertices.len();
+                            let mut partarray: Vec<String> = Vec::new();
+                            for counter in 0..todo {
+                                let subname = modeldata[2].to_string() + "_part" + &counter.to_string();
+                                batchedmodel(
+                                    subname.as_str(),
+                                    modelvertices[counter].clone(),
+                                    modelindices[counter].clone(),
+                                    ObjectSettings::default(),
+                                    &mut engine.renderer,
+                                    &mut engine.objects,
+                                );
+                                //Bluenc::textureset(&subname, &modeltextures[counter], &mut self.vmap);
+                                objects.settexture(engine, &subname, &modeltextures[counter], textures);
+
+                                //let totalvertices = Nstring::usize(&storage.objectgetprop("blueengine","totalvertices").stringdata);
+                                //let totalindices = Nstring::usize(&storage.objectgetprop("blueengine","totalindices").stringdata);
+                                //let newtotalvertices = totalvertices + modelvertices[counter].len();
+                                //let newtotalindices = totalindices + modelindices[counter].len();
+                                //storage.objectsetprop("blueengine", "totalvertices", &newtotalvertices.to_string());
+                                //self.vmap.setprop("blueengine", "totalindices", &newtotalindices.to_string());
+                                //println!("spawned part: {} vert{} indi{}" , &subname,&modelvertices[counter].len() ,&modelindices[counter].len());
+                                partarray.push(subname);
+                            }
+                            let mut nvar = NscriptVar::new(&modeldata[1].to_string());
+                            nvar.stringvec = partarray;
+                            storage.setglobal(&modeldata[1], nvar);
+                            //self.vmap.setstringarray(&(modeldata[1].to_string()+".parts"), partarray );
+                        }
+                        "modelbuffertofile" => {
+                            self.buffertofile(&modeldata[1], &modeldata[2]);
+                        }
+                        "modelspawn" =>{
+                            let (modelvertices,modelindices,modeltextures) = self.spawnmodel(&modeldata[2]);
+                            let todo = modelvertices.len();
+                            let mut partarray: Vec<String> = Vec::new();
+                            for counter in 0..todo {
+                                let subname = modeldata[1].to_string() + "_part" + &counter.to_string();
+                                batchedmodel(
+                                    subname.as_str(),
+                                    modelvertices[counter].clone(),
+                                    modelindices[counter].clone(),
+                                    ObjectSettings::default(),
+                                    &mut engine.renderer,
+                                    &mut engine.objects,
+                                );
+                                //self.vmap.nscript3d.externalmodels.insert(subname.to_string(),(modelvertices[counter].clone(),modelindices[counter].clone()));
+                                objects.settexture(engine,&subname, &modeltextures[counter],textures);
+                                //let totalvertices = nscript_usize(&self.vmap.getprop("blueengine","totalvertices"));
+                                //let totalindices = nscript_usize(&self.vmap.getprop("blueengine","totalindices"));
+                                //let newtotalvertices = totalvertices + modelvertices[counter].len();
+                                //let newtotalindices = totalindices + modelindices[counter].len();
+                                //self.vmap.setprop("blueengine", "totalvertices", &newtotalvertices.to_string());
+                                //self.vmap.setprop("blueengine", "totalindices", &newtotalindices.to_string());
+                                //println!("spawned part: {} vert{} indi{}" , &subname,&modelvertices[counter].len() ,&modelindices[counter].len());
+                                partarray.push(subname);
+                            }
+                            //self.vmap.setstringarray(&(modeldata[1].to_string()+".parts"), partarray );
+                            let  mut nvar = NscriptVar::new(&modeldata[1].to_string());
+                            nvar.stringvec = partarray;
+                            storage.setglobal(&modeldata[1], nvar);
+                        }
+                        "position" => {
+                            if modeldata.len() > 4 {
+                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                    let thisobj = objects.getobject(&xpart);
+                                    thisobj.setposition(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+//                                    Bluenc::nodesetposition(&xpart, &f64(modeldata[2]), &f64(&modeldata[3]), &f64(&modeldata[4]), &mut self.vmap);
+                                }
+                            }
+                        }
+                        "rotation" => {
+
+                            if modeldata.len() > 4 {
+                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                    //Bluenc::nodesetrotation(&xpart, &nscript_f64(modeldata[2]), &nscript_f64(&modeldata[3]), &nscript_f64(&modeldata[4]), &mut self.vmap);
+                                    let thisobj = objects.getobject(&xpart);
+                                    thisobj.setrotation(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+                                }
+                            }
+                        }
+                        "scale" => {
+
+                            if modeldata.len() > 4 {
+                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                    //Bluenc::nodesetscale(&xpart, &nscript_f64(modeldata[2]), &nscript_f64(&modeldata[3]), &nscript_f64(&modeldata[4]), &mut self.vmap);
+                                    let thisobj = objects.getobject(&xpart);
+                                    thisobj.setscale(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+
+                                }
+                            }
+                        }
+                        "delete" => {
+
+                            for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                //Bluenc::nodedelete(&xpart, &mut self.vmap);
+                                    //let thisobj = objects.getobject(&xpart);
+                                    objects.storage.remove(xpart.as_str());
+                                //self.vmap.delobj(&xpart);
+                            }
+                            storage.setglobal(&modeldata[1], NscriptVar::new(""));
+                            //self.vmap.deletestringarray(&(modeldata[1].to_string()+".parts"));
+                            //vmap.setvar("blueengine.deletion_q".to_owned(),&deletionq);
+                            //self.vmap.delobj(modeldata[1]);
+                        }
+
+
+                        _ => {
+
+                        }
+                    }
+
+                }
+                // }
+            }
+                storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS] = Vec::new();
+            }
+    }
     pub fn new() -> BatchedModels{
         let this = BatchedModels{
             vertices_square: vec![
@@ -427,7 +596,7 @@ impl BatchedModels{
         let mut idcounter = 0;
         for submodel in all_ids{
             let (partvertices,partindices) = self.loadmodelpart(&submodel, &subpartscontainer[idcounter]);
-            //println!("Loaded part{} vertices:{}",&submodel,&partindices.len());
+            println!("Loaded part{} vertices:{}",&submodel,&partindices.len());
             let mut getparts = self.getmodelparts(modelfilepath);
             getparts.push(submodel.clone());
             self.objects_partmap.insert(modelfilepath.to_string(), getparts);
@@ -555,6 +724,79 @@ impl BatchedModels{
         // Return the transformed vertices and the same indices
         (transformed_vertices, indices)
     }
+}
 
+pub fn nscriptfn_batchedmodel_spawntobuffer(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    if args.len() > 10 {
+        let name = storage.getargstring(&args[0], block);
+        let model = storage.getargstring(&args[1], block);
+        let x = storage.getargstring(&args[2], block);
+        let y = storage.getargstring(&args[3], block);
+        let z = storage.getargstring(&args[4], block);
+        let rx = storage.getargstring(&args[5], block);
+        let ry = storage.getargstring(&args[6], block);
+        let rz = storage.getargstring(&args[7], block);
+        let sx = storage.getargstring(&args[8], block);
+        let sy = storage.getargstring(&args[9], block);
+        let sz = storage.getargstring(&args[10], block);
+        storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("modelspawntobuffer".to_string(),name,model,x,y,z,rx,ry,rz,sx,sy,sz));
+    }else{
+        print("batchedmodel_spawntobuffer() argument error , requires 10args -> buffername,modelpath,x,y,z,rx,ry,rz,sx,sy,sz","r");
+    }
 
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_buildfromfile(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("buildmodelfromfile".to_string(),name.to_string()));
+    NscriptVar::newstring("v",name)
+}
+pub fn nscriptfn_batchedmodel_spawnfrombuffer(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let buffer = storage.getargstring(&args[0], block);
+    let name = storage.getargstring(&args[1], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("modelspawnfrombuffer".to_string(),buffer,name.clone()));
+
+    NscriptVar::newstring("v",name)
+
+}
+pub fn nscriptfn_batchedmodel_modelbuffertofile(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let buffername = storage.getargstring(&args[0], block);
+    let file = storage.getargstring(&args[1], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("modelbuffertofile".to_string(),buffername,file));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_modelspawn(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let objname = storage.getargstring(&args[0], block);
+    let model = storage.getargstring(&args[1], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("modelspawn".to_string(),objname,model));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_setposition(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = storage.getargstring(&args[1], block);
+    let y = storage.getargstring(&args[2], block);
+    let z = storage.getargstring(&args[3], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("position".to_string(),name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_setrotation(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = storage.getargstring(&args[1], block);
+    let y = storage.getargstring(&args[2], block);
+    let z = storage.getargstring(&args[3], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("rotation".to_string(),name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_setscale(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let x = storage.getargstring(&args[1], block);
+    let y = storage.getargstring(&args[2], block);
+    let z = storage.getargstring(&args[3], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("scale".to_string(),name,x,y,z));
+    NscriptVar::new("v")
+}
+pub fn nscriptfn_batchedmodel_delete(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    storage.customdata.static_vec_vec_vec_string[Q_CUSTOMMODELS].push(vec!("delete".to_string(),name));
+    NscriptVar::new("v")
 }

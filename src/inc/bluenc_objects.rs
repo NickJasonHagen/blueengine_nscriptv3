@@ -52,7 +52,7 @@ impl BluencObject{
         let obj = engine.objects.get_mut(&self.name).expect(&format!("Unexpectedly, the '{}' object wasn't found.",&self.name));
         obj.set_scale(Vector3::new(self.sx,self.sy,self.sz));
     }
-    pub fn settexture(&mut self, engine: &mut blue_engine::Engine , filepath:&str,_textures:&mut BluencTextures){
+    pub fn settexture(&mut self, engine: &mut blue_engine::Engine , filepath:&str,textures:&mut BluencTextures){
         self.texture = filepath.into();
         let obj = engine.objects.get_mut(&self.name).expect(&format!("Unexpectedly, the '{}' object wasn't found.",&self.name));
         obj.reference_texture(filepath);
