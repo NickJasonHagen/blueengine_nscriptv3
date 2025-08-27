@@ -20,8 +20,10 @@ mod inc{
     pub mod bluenc_objects;
     pub mod bluenc_animation;
     pub mod bluenc_batchedmodels;
+    pub mod bluenc_hud;
 }
 pub use inc::bluenc_camera::*;
+pub use inc::bluenc_hud::*;
 pub use inc::bluenc_textures::*;
 pub use inc::bluenc_objects::*;
 pub use inc::nscriptfnbindings::*;
@@ -52,6 +54,7 @@ pub const Q_ANIMATION: usize= 11;
 pub const BNC_SQUARE_Q: usize = 1;
 pub const BNC_ALLANIMS: usize = 12;
 pub const Q_CUSTOMMODELS: usize = 13;
+pub const Q_COLOR: usize = 14;
 pub struct BlueNc{
     //name:String,
     keyvec:Vec<blue_engine::KeyCode>,
@@ -61,6 +64,7 @@ pub struct BlueNc{
     objects:BluencObjects,
     animation:BluencAnimation,
     batchedmodels:BatchedModels,
+    hud:BluencHud,
 }
 impl BlueNc{
     pub fn new()->BlueNc{
@@ -73,6 +77,7 @@ impl BlueNc{
             objects: BluencObjects::new(),
             animation: BluencAnimation::new(),
             batchedmodels: BatchedModels::new(),
+            hud: BluencHud::new(),
         };
         let keyvec = [
             blue_engine::KeyCode::Escape,
@@ -251,6 +256,7 @@ impl BlueNc{
             "DX12" => {blue_engine::Backends::DX12}
             "Vulkan" => {blue_engine::Backends::VULKAN}
             "Metal" => {blue_engine::Backends::METAL}
+            "Primary" => {blue_engine::Backends::PRIMARY}
             "GL" | _ => {blue_engine::Backends::GL}
         };
         let mut engine = Engine::new_config(blue_engine::EngineSettings {
@@ -401,6 +407,7 @@ for _x in 0..30{
                 bnc.objects.q_handler(engine,&mut nscript.storage,&mut bnc.textures);
 bnc.batchedmodels.q_handler(engine, &mut bnc.objects,&mut bnc.textures, &mut nscript.storage);
                 bnc.animation.q_handler(engine,&mut nscript.storage);
+                bnc.hud.q_handler();
                 // obtain the plugin
                 // let egui_plugin = engine
                 //     .signals

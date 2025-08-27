@@ -1,4 +1,9 @@
 
+class textures{
+    for xtile in listdir("assets/tiles",true){
+        print("loaded texture",loadtexture(xtile),"by")
+    }
+}
 class sprite{
     func load(dir){
         loadsprite(dir)
@@ -6,7 +11,7 @@ class sprite{
     }
     func construct(){
         self.test = "ok"
-        print(self) !
+        //print(self) !
     }
     func spawn(obj,fromspritedir){
         obj = square(obj,0.0,3.0,0.0)
@@ -51,7 +56,7 @@ class sprite{
 }
 class camera{
     self.x = 3.0
-    self.y = 2.0
+    self.y = 4.0
     self.z = 6.0
     self.offy = 2.0
 
@@ -59,8 +64,14 @@ class camera{
     self.targety = 1.5
     self.targetz = 0.0
 }
+class tiles{
+
+}
 class maptiles{
-    func spawn(xtile,texture,posx,posy,posz){
+    func colgroup(x,z){
+        return cat(splitselect(x,".",0),"_",splitselect(z,".",0))
+    }
+    func spawn(xtile,texture,posx,posy,posz,coligroup){
         *xtile.x = posx
         *xtile.y = posy
         *xtile.z = posz
@@ -71,21 +82,25 @@ class maptiles{
         aabb_setscale(xtile,0.5,0.5,0.5)
         aabb_setposition(xtile,posx,posy,posz)
         aabb_addtogroup(xtile,"maptiles")
+        
+
+        
     }
     func collisioncheck(collisionid,x,y,z){
+        colgroup = maptiles.colgroup(x,z)
         x2 = *collisionid.x
         y2 = *collisionid.y
         z2 = *collisionid.z
         y -= 0.25
         aabb_setposition(collisionid,x,y,z)
-        col = aabb_getcollisions(collisionid,"maptiles")
+        col = arraymerge(aabb_getcollisions(collisionid,colgroup),aabb_getcollisions(collisionid,"maptiles"))
         if len(col) > 0{
             return true
         }
             y -= 0.37
             aabb_setposition(collisionid,x,y,z)
 
-            col = aabb_getcollisions(collisionid,"maptiles")
+            col = arraymerge(aabb_getcollisions(collisionid,colgroup),aabb_getcollisions(collisionid,"maptiles"))
             if len(col) > 0{
                 y = player.y + 0.12
                 //player.setposition(x2,y,z2)
@@ -101,7 +116,17 @@ class maptiles{
     }
     
 }
-
+func argb(argbcolor){
+    replacebyref(argbcolor,"rgb(","")
+    replacebyref(argbcolor,")",",,,")
+    replacebyref(argbcolor," ","")
+    rgbvec = split(argbcolor,",")
+    // rgbvec[0] = 0
+    // rgbvec[1] = trim(rgbvec[0])
+    // rgbvec[2] = trim(rgbvec[1])
+    // rgbvec[3] = trim(rgbvec[2])
+    rgbvec
+}
 class gravity{
     func construct(){
         this = self
@@ -110,6 +135,7 @@ class gravity{
         }
     }
     func pull(){
+        colgroup = maptiles.colgroup(player.x,player.z)
         if self.gravitymax > self.gravitycurrentpull{
             self.gravitycurrentpull += self.gravitypullstrenght 
         }
@@ -126,8 +152,9 @@ class gravity{
         }
         
         aabb_setposition(self,self.x,newy,self.z)  
-        col = aabb_getcollisions(self,"maptiles")
+        col = arraymerge(aabb_getcollisions(self,colgroup),aabb_getcollisions(self,"maptiles"))
         if len(col) > 0{
+            //col !
             self.ontile = true
             self.ontileid = col[0]
             self.gravitycurrentpull = -0.0
@@ -145,7 +172,7 @@ class gravity{
         //"ok"
 
     }
-    self.gravitymax = 0.7
+    self.gravitymax = 0.45
     self.gravitycurrentpull = 0.0
     self.gravitypullstrenght = 0.033
 }
@@ -181,7 +208,7 @@ class player : gravity{
 
     }
     self.aabb = aabb_newbox(self)
-    aabb_setscale(self.aabb,0.25,0.3,0.25)
+    aabb_setscale(self.aabb,0.5,0.3,0.5)
     func init(){
         $mysprite = "mysprite"
         $stack = arraynew()
@@ -226,9 +253,9 @@ sprite.load(spritebase)
 // }
 i = 0
 z = 0.0
-for x to 3{
+for x to 1{
     i ++
-    if i > 49 {
+    if i > 9 {
         z -= 10.0
         i = 0
     }
@@ -263,61 +290,153 @@ for x to 3{
 // mysprite : *spritebase
 // addsprite("mysprite")
 // spritesetanimation("mysprite","anim_right")
-for xtile in listdir(cat(@scriptdir,"assets/tiles"),true){
-    print("loaded texture",loadtexture(xtile),"by")
-}
-z = 1.0
-x = 1.0
-y = 1.6
-for xi to 500{
-    x ++
-    if x > 50 {
-        z ++    
+class map{
+    func createfile(){
+        z = 1.0
         x = 1.0
-        y -= 0.35
+        y = 1.6
+        fdata = ""
+        for xi to 15000{
+            x ++
+            model  = "./assets/tiles/grass.png"
+            if x > 150 {
+                z ++    
+                x = 1.0
+                if z < 15.0 {
+                    //y -= 0.15
+                }
+                if z > 15.0 {
+                    //y += 0.15
+                }
+                
+            }
+            if x < 2 || z < 2 {
+                model  = "./assets/tiles/mud.png"
+            }
+            if x > 10 && x < 13 {
+                model  = "./assets/tiles/street.png"
+            }
+
+            x = x * 1.0
+            z = z * 1.0
+            fdata = cat(fdata,model,",",x,",",y,",",z,",-90.0,0.0,0.0,0.5,0.5,0.5,square,,",@lf)
+            xtile = cat("maptile_",xi)
+            
+            aabb_newbox(xtile)
+            aabb_setscale(xtile,0.5,0.1,0.5)
+            aabb_setposition(xtile,x,y,z)
+            aabb_addtogroup(xtile,maptiles.colgroup(x,z))
+        }
+        filewrite("./assets/tmpmap",fdata)
     }
-    x = x * 1.0
-    z = z * 1.0
+
+    loadtexture("./assets/tiles/mud.png")
+    loadtexture("./assets/tiles/grass.png")
+    loadtexture("./assets/tiles/street.png")
     
-    
-    xtile = cat("tile",xi)
-    //cube(xtile,x,0.0,z)
-    //objectsetscale(xtile,0.5,0.5,0.5)
-    //objectsetrotation(xtile,90.0,0.0,0.0)
-    if z > 3.0 && z < 7.0 {
-        //settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))  
-        maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/street.png"),x,0.1,z)
+    map.createfile()
+    coroutine "aft"{
+    batchedmodel_modelspawn(
+        "map",
+        "assets/tmpmap"
+        )
+        break self
     }
-    else{
-        maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/grass.png"),x,y,z)
-        //settexture(xtile,cat(@scriptdir,"assets/tiles/grass.png"))       
-    }
-    //settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))
-    // xtile = cat("tiler2",x)
-    // square(xtile,x,-0.5,1.0)
-    // objectsetscale(xtile,0.5,0.5,0.5)
-    // objectsetrotation(xtile,-90.0,0.0,0.0)
-    // settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))
+
 }
+
+// z = 1.0
+// x = 1.0
+// y = 1.6
+// for xi to 100{
+//     x ++
+//     if x > 11 {
+//         z ++    
+//         x = 1.0
+//         y -= 0.35
+//     }
+//     x = x * 1.0
+//     z = z * 1.0
+    
+    
+//     xtile = cat("tile",xi)
+//     //cube(xtile,x,0.0,z)
+//     //objectsetscale(xtile,0.5,0.5,0.5)
+//     //objectsetrotation(xtile,90.0,0.0,0.0)
+//     if z > 3.0 && z < 7.0 {
+//         //settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))  
+//         maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/street.png"),x,0.1,z)
+//     }
+//     else{
+//         maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/grass.png"),x,y,z)
+//         //settexture(xtile,cat(@scriptdir,"assets/tiles/grass.png"))       
+//     }
+//     //settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))
+//     // xtile = cat("tiler2",x)
+//     // square(xtile,x,-0.5,1.0)
+//     // objectsetscale(xtile,0.5,0.5,0.5)
+//     // objectsetrotation(xtile,-90.0,0.0,0.0)
+//     // settexture(xtile,cat(@scriptdir,"assets/tiles/street.png"))
+// }
         base = cat(@scriptdir,"assets/tree")
         sprite.load(base)
-        for x to 15{
+        for x to 1{
             xcoin = cat("tree_",x)
             sprite.spawn(xcoin,base)
-            *xcoin.animate("anim_run").setposition(random(0.0,30.2),3.8,random(0.0,2.2)).setscale(2.0,2.0,2.0)
+            aabb_newbox(xcoin)
+            aabb_setscale(xcoin,0.1,2.0,0.1)
+            
+            *xcoin.animate("anim_run").setposition(random(0.0,70.1),2.8,random(0.0,70.2)).setscale(2.0,2.0,2.0)
+            aabb_setposition(xcoin,*xcoin.x,*xcoin.y,*xcoin.z)
+            aabb_addtogroup(xcoin,"maptiles")
 
         }
         base = cat(@scriptdir,"assets/gem_green")
         sprite.load(base)
-        for x to 15{
+        for x to 1{
             xcoin = cat("coin_",x)
             sprite.spawn(xcoin,base)
             *xcoin.animate("anim_run").setposition(random(0.0,10.2),random(0.0,4.1),random(0.0,10.1)).setscale(0.4,0.4,0.25)
 
         }
+        loadtexture("assets/tree/1.png")
+//buffer = batchedmodel_buildfromfile("assets/models/tree")a
+coroutine "pres"{
+        for xtree to 800{
+            xt = cat("xtree_",xtree)
+            x = random(0.1,151.10,4)
+            y = 1.7
+            z = random(1.0,120.3,3)
+            batchedmodel_spawntobuffer(
+                "forrestmap",
+                "assets/models/tree",
+                x,y,z,
+                0.0,0.0,0.0,
+                1.0,random(0.8,1.1),1.0
+            )
+
+            
+            //batchedmodel_setposition(xt,x,y,z)
+            aabb_newbox(xt)
+            aabb_setposition(xt,x,y,z)
+            aabb_setscale(xt,0.25,3,0.25)
+            aabb_addtogroup(xt,maptiles.colgroup(x,z))
+            
+        }
+        batchedmodel_modelbuffertofile(
+            "forrestmap",
+            "./assets/forrestmap"
+            )
+            batchedmodel_modelspawn(
+                "forrestmap",
+                "./assets/forrestmap"
+            )
+        break self
+}
+
         base = cat(@scriptdir,"assets/qbox")
         sprite.load(base)
-for x to 50 {
+for x to 10 {
     xtile = cat("ranblock",x)
     sprite.spawn(xtile,base)
     //*xtile.path = 0
@@ -326,20 +445,20 @@ for x to 50 {
     *xtile.path = random(-1.0,1.0)
     *xtile.beginx = random(1.51,105.0)
     maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/street.png"),*xtile.beginx,random(1.53,5.0),random(0.54,13.5))
-    gain = 0.05
+    gain = 0.1
     coroutine xtile each 80{
         
         if *xtile.pathretour == true{
             *xtile.path -= gain
             gainx = 0.0 - gain
-            if *xtile.path < -1.0{
+            if *xtile.path < -10.0{
                 *xtile.pathretour = false
             }
         }
         else{
             *xtile.path += gain
             gainx = gain
-            if *xtile.path > 1.0{
+            if *xtile.path > 10.0{
                 *xtile.pathretour = true
             }
         }
@@ -356,32 +475,44 @@ for x to 50 {
 xtile = "background"
 square(xtile,x,-35.0,-20.0)
 objectsetscale(xtile,400.5,100.5,10.5)
-loadtexture(cat(@scriptdir,"assets/background.png"))
-settexture(xtile,cat(@scriptdir,"assets/background.png"))
+loadtexture(cat(@scriptdir,"./assets/background.png"))
+settexture(xtile,cat(@scriptdir,"./assets/background.png"))
 print(*spritebase.anim_right,"by")
 
+loadtexture("assets/tiles/mud.png")
+loadtexture("assets/tiles/grass.png")
 
-
-batchedmodel_buildfromfile("assets/tiles/street")
+//batch = batchedmodel_buildfromfile("./assets/models/street")
 batchedmodel_spawntobuffer(
     "testme",
-    "assets/tiles/street",
+    "assets/models/street",
     2.0,4.0,2.0,
     0.0,0.0,0.0,
     1.0,10.0,1.0
 )
-// batchedmodel_modelbuffertofile("testme", "./assets/tmpmap")
-// //batchedmodel_spawnfrombuffer("testme","test2")
-
-// mdl = batchedmodel_buildfromfile("./assets/tmpmap")
-batchedmodel_modelspawn(
+batchedmodel_spawntobuffer(
     "testme",
-    "testme"
- )
+    "assets/models/tree",
+    -2.0,4.0,2.0,
+    0.0,40.0,0.0,
+    1.0,10.0,1.0
+)
+batchedmodel_modelbuffertofile(
+    "testme",
+    "assets/testmap.txt"
+)
+// batchedmodel_modelbuffertofile("testme", "./assets/tmpmap")
+//batchedmodel_spawnfrombuffer("testme",batch)
+//batchedmodel_spawnfrombuffer(batch,batch)
+// mdl = batchedmodel_buildfromfile("./assets/tmpmap")
+batchedmodel_spawnfrombuffer(
+    "oioi",
+    "assets/models/tree"
+    )
 // batchedmodel_setscale("test2",2.0,20.0,2.0)
 //batchedmodel_modelspawnfrombuffer("testme",thismodel)
-//batchedmodel_setposition("testme",2.0,4.0,2.0)
-//batchedmodel_setrotation("testme",2.0,4.0,2.0)
+batchedmodel_setposition("oioi",-3.0,1.0,2.0)
+//batchedmodel_setrotation("oioi",2.0,67.0,2.0)
 coroutine "gamecontrols" each 26{
     if key.event == true{
         if key.d == "down" {
@@ -453,10 +584,12 @@ coroutine "gamecontrols" each 26{
         if key.up == "down" {
             camera.offy += speed
             camera.targety += speed
+            camera.z += speed
         }
         if key.down == "down" {
             camera.offy -= speed
             camera.targety -= speed
+            camera.z -= speed
         }
         if key.i == "down" {
             objectsetrotation("triangle",30.0,35.0,34.0) // working
@@ -467,6 +600,10 @@ coroutine "gamecontrols" each 26{
         if key.q == "down" {
             // spritesetanimation("oi","anim_left")
             // print(join(oi.anim_right,"+"),"r")
+            mycolor = argb("rgb(47, 35, 98)")
+            mycolor !
+            objectsetcolor("draakje",mycolor[0],mycolor[1],mycolor[2],1.0)
+            batchedmodel_delete("map")
             print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
         }
         if key.e == "down" {

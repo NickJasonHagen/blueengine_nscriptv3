@@ -3,6 +3,7 @@ use crate::*;
 pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
     nscript.insertfn("setcamerapos",nscriptfn_setcamerapos,"setcamerapos(objectid,x:float,y:float,z:float)");
     nscript.insertfn("objectsetposition",nscriptfn_objectsetposition,"objectsetposition(objectid,x:float,y:float,z:float)");
+    nscript.insertfn("objectsetcolor",nscriptfn_objectsetcolor,"objectsetcolor(objectid,int,int,int,int) // sets the objects color with a argb");
     nscript.insertfn("objectsetrotation",nscriptfn_objectsetrotation,"objectsetrotation(objectid,x:float,y:float,z:float)");
     nscript.insertfn("objectsetscale",nscriptfn_objectsetscale,"objectsetscale(objectid,x:float,y:float,z:float)");
     nscript.insertfn("cube",nscriptfn_cube,"cube(objectid,x:float,y:float,z:float) // returns objectid , spawns a cube in 3d");
@@ -44,6 +45,15 @@ pub fn nscriptfn_setcamerapos(args:&Vec<&str>,block:&mut NscriptCodeBlock,storag
      storage.objectsetprop(&name,"targetz",var);
     storage.customdata.static_vec_bool[Q_CAMERA] = true;
     NscriptVar::new("camera")
+}
+pub fn nscriptfn_objectsetcolor(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let name = storage.getargstring(&args[0], block);
+    let a = storage.getargstring(&args[1], block);
+    let r = storage.getargstring(&args[2], block);
+    let g = storage.getargstring(&args[3], block);
+    let b = storage.getargstring(&args[4], block);
+    storage.customdata.static_vec_vec_vec_string[Q_COLOR].push(vec!(name,a,r,g,b));
+    NscriptVar::new("v")
 }
 pub fn nscriptfn_objectsetposition(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
     let name = storage.getargstring(&args[0], block);

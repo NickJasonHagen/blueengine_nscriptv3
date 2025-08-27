@@ -76,11 +76,11 @@ impl BatchedModels{
                         }
 
                         "modelspawnfrombuffer" =>{
-                            let (modelvertices,modelindices,modeltextures) = self.spawnmodelfrombuffer(&modeldata[1]);
+                            let (modelvertices,modelindices,modeltextures) = self.spawnmodelfrombuffer(&modeldata[2]);
                             let todo = modelvertices.len();
                             let mut partarray: Vec<String> = Vec::new();
                             for counter in 0..todo {
-                                let subname = modeldata[2].to_string() + "_part" + &counter.to_string();
+                                let subname = modeldata[1].to_string() + "_part" + &counter.to_string();
                                 batchedmodel(
                                     subname.as_str(),
                                     modelvertices[counter].clone(),
@@ -90,6 +90,7 @@ impl BatchedModels{
                                     &mut engine.objects,
                                 );
                                 //Bluenc::textureset(&subname, &modeltextures[counter], &mut self.vmap);
+                                objects.newobject(&subname);
                                 objects.settexture(engine, &subname, &modeltextures[counter], textures);
 
                                 //let totalvertices = Nstring::usize(&storage.objectgetprop("blueengine","totalvertices").stringdata);
@@ -124,6 +125,8 @@ impl BatchedModels{
                                     &mut engine.objects,
                                 );
                                 //self.vmap.nscript3d.externalmodels.insert(subname.to_string(),(modelvertices[counter].clone(),modelindices[counter].clone()));
+
+                                objects.newobject(&subname);
                                 objects.settexture(engine,&subname, &modeltextures[counter],textures);
                                 //let totalvertices = nscript_usize(&self.vmap.getprop("blueengine","totalvertices"));
                                 //let totalindices = nscript_usize(&self.vmap.getprop("blueengine","totalindices"));
@@ -141,9 +144,9 @@ impl BatchedModels{
                         }
                         "position" => {
                             if modeldata.len() > 4 {
-                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                for xpart in &storage.getglobal(&modeldata[1]).stringvec{
                                     let thisobj = objects.getobject(&xpart);
-                                    thisobj.setposition(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+                                    thisobj.setposition(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[4]));
 //                                    Bluenc::nodesetposition(&xpart, &f64(modeldata[2]), &f64(&modeldata[3]), &f64(&modeldata[4]), &mut self.vmap);
                                 }
                             }
@@ -151,27 +154,27 @@ impl BatchedModels{
                         "rotation" => {
 
                             if modeldata.len() > 4 {
-                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                for xpart in &storage.getglobal(&modeldata[1]).stringvec{
                                     //Bluenc::nodesetrotation(&xpart, &nscript_f64(modeldata[2]), &nscript_f64(&modeldata[3]), &nscript_f64(&modeldata[4]), &mut self.vmap);
                                     let thisobj = objects.getobject(&xpart);
-                                    thisobj.setrotation(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+                                    thisobj.setrotation(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[4]));
                                 }
                             }
                         }
                         "scale" => {
 
                             if modeldata.len() > 4 {
-                                for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                                for xpart in &storage.getglobal(&modeldata[1]).stringvec{
                                     //Bluenc::nodesetscale(&xpart, &nscript_f64(modeldata[2]), &nscript_f64(&modeldata[3]), &nscript_f64(&modeldata[4]), &mut self.vmap);
                                     let thisobj = objects.getobject(&xpart);
-                                    thisobj.setscale(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[3]));
+                                    thisobj.setscale(engine, self.f32(&modeldata[2]),self.f32(&modeldata[3]),self.f32(&modeldata[4]));
 
                                 }
                             }
                         }
                         "delete" => {
 
-                            for xpart in &storage.getglobal(&(modeldata[1].to_string()+".parts")).stringvec{
+                            for xpart in &storage.getglobal(&modeldata[1]).stringvec{
                                 //Bluenc::nodedelete(&xpart, &mut self.vmap);
                                     //let thisobj = objects.getobject(&xpart);
                                     objects.storage.remove(xpart.as_str());
@@ -467,7 +470,7 @@ impl BatchedModels{
                 + "," + &newrz.to_string()
                 + "," + &newsx.to_string()
                 + "," + &newsy.to_string()
-                + "," + &newsz.to_string() + ",\n";
+                + "," + &newsz.to_string() + ",,\n";
             }
         }
         self.objects_rawmodeldata.insert(bufferobjectname.to_string(), bufferdata);
@@ -519,6 +522,8 @@ impl BatchedModels{
             self.buildmodelfromfile(modelfilepath);
             getparts = self.getmodelparts(modelfilepath);
         }
+        // else{
+        // }
         let mut vertices: Vec<Vec<blue_engine::Vertex>> = Vec::new();
         let mut indices: Vec<Vec<u16>> = Vec::new();
         let mut counter = 0;
@@ -566,7 +571,7 @@ impl BatchedModels{
         let filedatasplit:Vec<&str> =  filedata.split("\n").collect();
         for parts in filedatasplit{//.split("\n").collect(){
             let quadparts :Vec<String> = parts.split(",").map(|s| s.to_string()).collect();
-            if quadparts.len() > 10{
+            if quadparts.len() > 9{
 
                 // For each texture used in the mode we create a submesh
                 // // this sorts them into the arrys dynamicly, none creates a new vec some pushes
@@ -589,6 +594,9 @@ impl BatchedModels{
                         subpartscontainer[id].push(parts.to_string());
                     }
                 }
+                //print("addedpart","r");
+            }else{
+                //print("batchedmodel build not 11","r");
             }
         }
 
@@ -596,7 +604,6 @@ impl BatchedModels{
         let mut idcounter = 0;
         for submodel in all_ids{
             let (partvertices,partindices) = self.loadmodelpart(&submodel, &subpartscontainer[idcounter]);
-            println!("Loaded part{} vertices:{}",&submodel,&partindices.len());
             let mut getparts = self.getmodelparts(modelfilepath);
             getparts.push(submodel.clone());
             self.objects_partmap.insert(modelfilepath.to_string(), getparts);
@@ -604,6 +611,7 @@ impl BatchedModels{
             self.objects_indices.insert(submodel.to_string(),partindices);
             idcounter +=1;
         }
+        println!("Loaded part{}",&modelfilepath);
         self.objects_texturemap.insert(modelfilepath.to_string(),all_textures);
         modelfilepath.to_string()
     }

@@ -52,7 +52,11 @@ impl BluencObject{
         let obj = engine.objects.get_mut(&self.name).expect(&format!("Unexpectedly, the '{}' object wasn't found.",&self.name));
         obj.set_scale(Vector3::new(self.sx,self.sy,self.sz));
     }
-    pub fn settexture(&mut self, engine: &mut blue_engine::Engine , filepath:&str,textures:&mut BluencTextures){
+    pub fn setcolor(&mut self,engine: &mut blue_engine::Engine,a:f32,r:f32,g:f32,b:f32){
+        let obj = engine.objects.get_mut(&self.name).expect(&format!("Unexpectedly, the '{}' object wasn't found.",&self.name));
+        obj.set_color(a,r,g,b);
+    }
+    pub fn settexture(&mut self, engine: &mut blue_engine::Engine , filepath:&str,_textures:&mut BluencTextures){
         self.texture = filepath.into();
         let obj = engine.objects.get_mut(&self.name).expect(&format!("Unexpectedly, the '{}' object wasn't found.",&self.name));
         obj.reference_texture(filepath);
@@ -72,6 +76,9 @@ impl BluencObjects{
             storage: HashMap::new(),
             unknownobject: BluencObject::new("unknown")
         }
+    }
+    pub fn newobject(&mut self,name:&str){
+        self.storage.insert(name.into(),BluencObject::new(&name));
     }
     pub fn square(&mut self,engine:&mut blue_engine::Engine,name:&str) -> &mut Self{
         square(
@@ -199,6 +206,16 @@ impl BluencObjects{
             }
             storage.customdata.static_vec_vec_vec_string[Q_SETTEXTURE] = Vec::new();
         }
+        //set color
+        let vect = &storage.customdata.static_vec_vec_vec_string[Q_COLOR];
+        if vect.len()>0{
+            for argb in vect{
+                let thisobject = self.getobject(&argb[0]);
+                thisobject.setcolor(engine, Nstring::f32(&argb[1]),  Nstring::f32(&argb[2]), Nstring::f32(&argb[3]),Nstring::f32(&argb[4]) );
+            }
+            storage.customdata.static_vec_vec_vec_string[Q_COLOR] = Vec::new();
+        }
+
 
         //set textures
         let vect =&storage.customdata.static_vec_vec_string[Q_DELETE];
