@@ -26,6 +26,45 @@ pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
     nscript.insertfn("batchedmodel_setscale",nscriptfn_batchedmodel_setscale,"batchedmodel_setscale(object,x,y,z) // adjusts the objects matrix");
     nscript.insertfn("batchedmodel_delete",nscriptfn_batchedmodel_delete,"batchedmodel_delete(object) //  deletes the objects matrix");
     nscript.insertfn("batchedmodel_modelbuffertofile",nscriptfn_batchedmodel_modelbuffertofile,"batchedmodel_modelbuffertofile(buffer,file) //  buffer to file");
+    nscript.insertfn("textnode",nscriptfn_textnode,"textnode(objname,text,x,y,size,font) //  renders text on the screen on a camera disabled layer");
+    nscript.insertfn("textnodeupdate",nscriptfn_textnodeupdate,"textnodeupdate(objname,text,x,y,size,font) //  updates rendered text on the screen on a camera disabled layer, see textnode()");
+    nscript.insertfn("textnodedelete",nscriptfn_textnodedelete,"textnodedelete(objname) //  deletes rendered text on the screen on a camera disabled layer, see textnode()");
+    nscript.insertfn("image2d",nscriptfn_image2d,"image2d(objname,textureref,posx,posy,scalex,scaley) //  creates a square object on the hud layer.");
+    nscript.insertfn("textnodesetcolor",nscriptfn_textnodesetcolor,"textnodesetcolor(objname,f32:red,f32:green,f32:blue,f32:alpha) //  change the color of a textnode");
+    nscript.insertfn("updatewindow",nscriptfn_updatewindow,"updatewindow() //  sets $windowsize as a vec [width,height]");
+    nscript.insertfn("pixelstocoords",nscriptfn_pixelstocoords,"pixelstocoords(pos[x,y],screen[width,height]) // takes 2 vectors2's calculates the pixels to coords -1.0 to 1.0 and returns a vec[x,y] with the results");
+}
+pub fn nscriptfn_updatewindow(_args:&Vec<&str>,_block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    storage.customdata.static_vec_vec_vec_string[Q_EVENTS].push(vec!("updatewindow".to_string()));
+    NscriptVar::new("windowupdated")
+}
+pub fn nscriptfn_pixelstocoords(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let pos = storage.getargstringvec(args[0], block);
+    let screensize = storage.getargstringvec(args[1], block);
+    let mut x  = Nstring::f32(&pos[0]);
+    let mut y = Nstring::f32(&pos[1]);
+
+    let width = Nstring::f32(&screensize[0]);
+    let height = Nstring::f32(&screensize[1]);
+    if x > width {
+        x = width.clone();
+    }
+    if x < 0.0 {
+        x = 0.0;
+    }
+    if y > height {
+        y = height.clone();
+    }
+    if y < 0.0 {
+        y = 0.0;
+    }
+    let xproc = width/200.0;
+    let yproc = height/200.0;
+
+    let xp = -1.0 + ((x/xproc) * 0.01);
+    let yp = 1.0 -((y/yproc) * 0.01);
+//print(&format!("x {} y {} w {} h {}",&x,&y,width,height),"r");
+    NscriptVar::newvec("windowupdated",vec!(xp.to_string(),yp.to_string()))
 }
 
 pub fn nscriptfn_setcamerapos(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{

@@ -1,121 +1,18 @@
 
+class includes{
+    init "scripts/engine/sprite.nc"
+    init "scripts/engine/camera.nc"
+    init "scripts/world/map.nc"
+    init "scripts/engine/hud.nc"
+}
 class textures{
     for xtile in listdir("assets/tiles",true){
         print("loaded texture",loadtexture(xtile),"by")
     }
 }
-class sprite{
-    func load(dir){
-        loadsprite(dir)
-        *dir.loaded = 1
-    }
-    func construct(){
-        self.test = "ok"
-        //print(self) !
-    }
-    func spawn(obj,fromspritedir){
-        obj = square(obj,0.0,3.0,0.0)
-        objectsetscale(obj,0.5,1.0,0.5)
-        *obj : sprite
-        *obj : *fromspritedir
-        //object::toobject(fromspritedir,obj)//obj : *fromspritedir
-        addsprite(obj)
-        //spritesetanimation(obj,animationstring)
-        print(obj," into ",fromspritedir," test=",*obj.test,"pink")
-        obj
-    }
-    func animate(animationstring){
-        if self.currentanim != animationstring{
-            self.currentanim = animationstring
-            spritesetanimation(self,animationstring)
-        }
 
-    }
-    func setposition(x,y,z){
-        self.x = x
-        self.y = y
-        self.z = z
-        objectsetposition(self,x,y,z)
-        aabb_setposition(self,x,y,z)
 
-    }
-    func setrotation(x,y,z){
-        objectsetrotation(self,x,y,z)
-    }
-    func setscale(x,y,z){
-        objectsetscale(self,x,y,z)
-    }
-    func delete(){
-        removesprite(self)
-        objectremove(self)
-    }
-    self.currentanim = "none"
-    self.test = "nope"
-    self.idletimer = timerinit()
-    self.animtimer = timerinit()
-}
-class camera{
-    self.x = 3.0
-    self.y = 4.0
-    self.z = 6.0
-    self.offy = 2.0
 
-    self.targetx = 3.0
-    self.targety = 1.5
-    self.targetz = 0.0
-}
-class tiles{
-
-}
-class maptiles{
-    func colgroup(x,z){
-        return cat(splitselect(x,".",0),"_",splitselect(z,".",0))
-    }
-    func spawn(xtile,texture,posx,posy,posz,coligroup){
-        *xtile.x = posx
-        *xtile.y = posy
-        *xtile.z = posz
-        cube(xtile,posx,posy,posz)
-        objectsetscale(xtile,0.5,0.5,0.5)
-        settexture(xtile,texture)  
-        aabb_newbox(xtile)
-        aabb_setscale(xtile,0.5,0.5,0.5)
-        aabb_setposition(xtile,posx,posy,posz)
-        aabb_addtogroup(xtile,"maptiles")
-        
-
-        
-    }
-    func collisioncheck(collisionid,x,y,z){
-        colgroup = maptiles.colgroup(x,z)
-        x2 = *collisionid.x
-        y2 = *collisionid.y
-        z2 = *collisionid.z
-        y -= 0.25
-        aabb_setposition(collisionid,x,y,z)
-        col = arraymerge(aabb_getcollisions(collisionid,colgroup),aabb_getcollisions(collisionid,"maptiles"))
-        if len(col) > 0{
-            return true
-        }
-            y -= 0.37
-            aabb_setposition(collisionid,x,y,z)
-
-            col = arraymerge(aabb_getcollisions(collisionid,colgroup),aabb_getcollisions(collisionid,"maptiles"))
-            if len(col) > 0{
-                y = player.y + 0.12
-                //player.setposition(x2,y,z2)
-                //mysprite.x = x2
-                mysprite.y = y
-                //mysprite.z = z2
-            }
-            else{
-                aabb_setposition(collisioncheck,x2,y2,z2)
-            }
-
-        return false
-    }
-    
-}
 func argb(argbcolor){
     replacebyref(argbcolor,"rgb(","")
     replacebyref(argbcolor,")",",,,")
@@ -181,24 +78,50 @@ class player : gravity{
         mysprite.animate(anim)
     }
     func setposition(x,y,z){
-        camy = y + camera.offy
-        setcamerapos("camera",x,camy,camera.z,x,y,z)
-        //setcamerapos("camera",camera.x,camera.y,camera.z,camera.targetx,0.0,camera.targetz)
-        //objectsetposition("mysprite",camera.x,1.5,0.0)
-        self.x = x
-        self.y = y
-        self.z = z
-        *$mysprite.setposition(x,y,z)
-        aabb_setposition(self,x,y,z)
-        $stack = arrayroll($stack,cat(*$mysprite.currentanim,",",x,",",y,",",z))
-         split = split($stack[9],",")
-         //
-         draakje.animate(split[0])
-         petx = split[1] - 0.25
-         pety = split[2] - 0.2
-         petz = split[3] - 0.1
-         
-         draakje.setposition(petx,pety,petz)
+            
+        //if self.x != x || self.y != y || self.z != z{
+            camy = y + camera.offy
+            setcamerapos("camera",x,camy,camera.z,x,y,z)
+            //setcamerapos("camera",camera.x,camera.y,camera.z,camera.targetx,0.0,camera.targetz)
+            //objectsetposition("mysprite",camera.x,1.5,0.0)
+
+            self.x = x
+            self.y = y
+            self.z = z
+            *$mysprite.setposition(x,y,z)
+            aabb_setposition(self,x,y,z)
+            $stack = arrayroll($stack,cat(*$mysprite.currentanim,",",x,",",y,",",z))
+            split = split($stack[9],",")
+            //
+            draakje.animate(split[0])
+            //petx = split[1] - draakje.petx
+            
+            match mysprite.side{
+                "right" =>{
+                    //print("oioioi")
+                    draakje.petx = -0.25
+                }
+                "left" =>{
+                    draakje.petx = 0.25
+                    
+                }
+                "up" =>{
+                    draakje.petz = -0.25
+                }
+                "down" =>{
+                    draakje.petz = 0.25
+                }
+                _ =>{
+                    //print("playerside unknown")
+                }
+            }
+            petx = split[1] + draakje.petx
+            pety = split[2] - 0.2//draakje.pety
+            petz = split[3] - draakje.petz
+            
+            draakje.setposition(petx,pety,petz)
+        //}
+
 
     }
     func jump(){
@@ -220,7 +143,10 @@ class player : gravity{
         sprite.load(base)
         draakje : sprite
         draakje = sprite.spawn("draakje",base)
-        draakje.animate("anim_right").setscale(0.8,0.7,0.6)
+        draakje.animate("anim_right").setscale(0.8,0.8,0.6)
+        draakje.petx = 0.5
+        draakje.petz = 0.5
+        //objectsetcolor(draakje,122,122,122,0.7)
     }
     self.x = 3.0
     self.y = 3.0
@@ -253,7 +179,7 @@ sprite.load(spritebase)
 // }
 i = 0
 z = 0.0
-for x to 1{
+for x to 0{
     i ++
     if i > 9 {
         z -= 10.0
@@ -290,60 +216,7 @@ for x to 1{
 // mysprite : *spritebase
 // addsprite("mysprite")
 // spritesetanimation("mysprite","anim_right")
-class map{
-    func createfile(){
-        z = 1.0
-        x = 1.0
-        y = 1.6
-        fdata = ""
-        for xi to 15000{
-            x ++
-            model  = "./assets/tiles/grass.png"
-            if x > 150 {
-                z ++    
-                x = 1.0
-                if z < 15.0 {
-                    //y -= 0.15
-                }
-                if z > 15.0 {
-                    //y += 0.15
-                }
-                
-            }
-            if x < 2 || z < 2 {
-                model  = "./assets/tiles/mud.png"
-            }
-            if x > 10 && x < 13 {
-                model  = "./assets/tiles/street.png"
-            }
 
-            x = x * 1.0
-            z = z * 1.0
-            fdata = cat(fdata,model,",",x,",",y,",",z,",-90.0,0.0,0.0,0.5,0.5,0.5,square,,",@lf)
-            xtile = cat("maptile_",xi)
-            
-            aabb_newbox(xtile)
-            aabb_setscale(xtile,0.5,0.1,0.5)
-            aabb_setposition(xtile,x,y,z)
-            aabb_addtogroup(xtile,maptiles.colgroup(x,z))
-        }
-        filewrite("./assets/tmpmap",fdata)
-    }
-
-    loadtexture("./assets/tiles/mud.png")
-    loadtexture("./assets/tiles/grass.png")
-    loadtexture("./assets/tiles/street.png")
-    
-    map.createfile()
-    coroutine "aft"{
-    batchedmodel_modelspawn(
-        "map",
-        "assets/tmpmap"
-        )
-        break self
-    }
-
-}
 
 // z = 1.0
 // x = 1.0
@@ -380,7 +253,7 @@ class map{
 // }
         base = cat(@scriptdir,"assets/tree")
         sprite.load(base)
-        for x to 1{
+        for x to 0{
             xcoin = cat("tree_",x)
             sprite.spawn(xcoin,base)
             aabb_newbox(xcoin)
@@ -393,7 +266,7 @@ class map{
         }
         base = cat(@scriptdir,"assets/gem_green")
         sprite.load(base)
-        for x to 1{
+        for x to 0{
             xcoin = cat("coin_",x)
             sprite.spawn(xcoin,base)
             *xcoin.animate("anim_run").setposition(random(0.0,10.2),random(0.0,4.1),random(0.0,10.1)).setscale(0.4,0.4,0.25)
@@ -402,17 +275,18 @@ class map{
         loadtexture("assets/tree/1.png")
 //buffer = batchedmodel_buildfromfile("assets/models/tree")a
 coroutine "pres"{
-        for xtree to 800{
+        for xtree to 100{
             xt = cat("xtree_",xtree)
-            x = random(0.1,151.10,4)
+            x = random(0.1,151.10,0)
             y = 1.7
-            z = random(1.0,120.3,3)
+            z = random(1.0,130.3,0)
             batchedmodel_spawntobuffer(
                 "forrestmap",
                 "assets/models/tree",
                 x,y,z,
                 0.0,0.0,0.0,
-                1.0,random(0.8,1.1),1.0
+                0.3,random(0.4,0.7),0.3,
+                "square"
             )
 
             
@@ -420,7 +294,9 @@ coroutine "pres"{
             aabb_newbox(xt)
             aabb_setposition(xt,x,y,z)
             aabb_setscale(xt,0.25,3,0.25)
-            aabb_addtogroup(xt,maptiles.colgroup(x,z))
+            colgroup = maptiles.colgroup(x,z)
+            //colgroup !
+            aabb_addtogroup(xt,colgroup)
             
         }
         batchedmodel_modelbuffertofile(
@@ -431,33 +307,46 @@ coroutine "pres"{
                 "forrestmap",
                 "./assets/forrestmap"
             )
+            sprite.load("./assets/tree")
+            sprite.add("forrestmap_part0", "./assets/tree")
+            forrestmap_part0.animate("anim_run")
+            // batchedmodel_spawnfrombuffer(
+            //     "forrestmap",
+            //     "testforrest"
+            // )
+            // ry = 0.0
+            // coroutine "rotateforresttest" each 40{
+            //     ry += 0.1
+            //     batchedmodel_setrotation("forrestmap",0.0,ry,0.0)
+            // }
         break self
 }
 
         base = cat(@scriptdir,"assets/qbox")
         sprite.load(base)
-for x to 10 {
+for x to 0 {
     xtile = cat("ranblock",x)
     sprite.spawn(xtile,base)
     //*xtile.path = 0
     *xtile.pathretour = false
     *xtile.animate("anim_run")
     *xtile.path = random(-1.0,1.0)
+    *xtile.movespeed = random(0.1,0.3)
     *xtile.beginx = random(1.51,105.0)
-    maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/street.png"),*xtile.beginx,random(1.53,5.0),random(0.54,13.5))
+    maptiles.spawn(xtile,cat(@scriptdir,"assets/tiles/street.png"),*xtile.beginx,random(1.53,5.0),random(0.54,100.5))
     gain = 0.1
     coroutine xtile each 80{
         
         if *xtile.pathretour == true{
-            *xtile.path -= gain
-            gainx = 0.0 - gain
+            *xtile.path -= *xtile.movespeed
+            gainx = 0.0 - *xtile.movespeed
             if *xtile.path < -10.0{
                 *xtile.pathretour = false
             }
         }
         else{
-            *xtile.path += gain
-            gainx = gain
+            *xtile.path += *xtile.movespeed
+            gainx = *xtile.movespeed
             if *xtile.path > 10.0{
                 *xtile.pathretour = true
             }
@@ -515,6 +404,7 @@ batchedmodel_setposition("oioi",-3.0,1.0,2.0)
 //batchedmodel_setrotation("oioi",2.0,67.0,2.0)
 coroutine "gamecontrols" each 26{
     if key.event == true{
+        moved = false
         if key.d == "down" {
             //if *mysprite.side != "right"{
                 //spritesetanimation("mysprite","anim_right")
@@ -529,6 +419,7 @@ coroutine "gamecontrols" each 26{
                 camera.x += speed
                 mysprite.x += speed
                 camera.targetx += speed
+                moved = true
             }
         }
         if key.a == "down" {
@@ -542,6 +433,7 @@ coroutine "gamecontrols" each 26{
                 camera.x -= speed
                 mysprite.x -= speed
                 camera.targetx -= speed
+                moved = true
             }
 
         }
@@ -557,6 +449,7 @@ coroutine "gamecontrols" each 26{
                 camera.z -= speed
                 camera.targetz -= speed
                 mysprite.z -= speed
+                moved = true
             }
 
 
@@ -564,6 +457,7 @@ coroutine "gamecontrols" each 26{
         if key.space == "down"{
             if player.jumping == false {
                 player.jump()
+                moved = true
             }
         }
         if key.s == "down" {
@@ -575,9 +469,10 @@ coroutine "gamecontrols" each 26{
             onz = player.z + 0.5
             ony = player.y + 0.1
             if maptiles.collisioncheck(player.aabb,player.x,ony,onz) == false{
-            camera.z += speed
-            camera.targetz += speed
-            mysprite.z += speed
+                camera.z += speed
+                camera.targetz += speed
+                mysprite.z += speed
+                moved = true
             }
 
         }
@@ -595,31 +490,37 @@ coroutine "gamecontrols" each 26{
             objectsetrotation("triangle",30.0,35.0,34.0) // working
         }
         if key.o == "down" {
-            objectsetrotation("triangle",0.0,0.0,0.0)
+hud.testremove()
         }
         if key.q == "down" {
             // spritesetanimation("oi","anim_left")
             // print(join(oi.anim_right,"+"),"r")
             mycolor = argb("rgb(47, 35, 98)")
             mycolor !
-            objectsetcolor("draakje",mycolor[0],mycolor[1],mycolor[2],1.0)
+            objectsetcolor("draakje",1.0,0.5,0.2,1.0)
             batchedmodel_delete("map")
             print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
         }
         if key.e == "down" {
-            spritesetanimation("mysprite","anim_right")
-            print(join(mysprite.anim_right,"+"),"r")
-            print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
+            objectsetcolor("draakje",0.1,0.9,1.0,1.0)
+            // spritesetanimation("mysprite","anim_right")
+            // print(join(mysprite.anim_right,"+"),"r")
+            // print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
         }
+
         mysprite.idletimer = timerinit()
 
         //*mysprite2.setposition(camera.x,4.5,0.0)
     }
-
+    //if mousekey.right == "down"{
+        cursor.move()
+    //}
     //objectsetposition("mysprite",camera.x,1.5,0.0)
     //*mysprite.setposition(camera.x,1.5,mysprite.z)
 
-    player.setposition(mysprite.x,mysprite.y,mysprite.z)
+    //if moved == true {
+        player.setposition(mysprite.x,mysprite.y,mysprite.z)
+    //}
     if mysprite.y < -20.0 {
         mysprite.x = 10.0
         mysprite.y = 10.0
@@ -672,17 +573,17 @@ fpstimer = timerinit()
 uptime = 0
 coroutine "fpscounter"{
     fpscounter ++
-    if timerdiff(fpstimer) > 2999{
-        fps = fpscounter / 3
-        uptime += 3
+    if timerdiff(fpstimer) > 999{
+        fps = fpscounter
+        uptime += 1
         uptimeinmin = round(devide(uptime,60),3)
 
         fpscounter = 0
-        print(cat("fps:",round(fps,3)," uptime: ",uptimeinmin,"min"),"bg")
+        $fpsmsg = cat("fps:",fps," uptime: ",uptimeinmin,"min")
         fpstimer = timerinit()
     }
 }
-coroutine "game2" each 10000{
-    $testtriangle = "go"
-    break self
-}
+// coroutine "game2" each 10000{
+//     $testtriangle = "go"
+//     break self
+// }

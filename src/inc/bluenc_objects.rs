@@ -14,6 +14,8 @@ pub struct BluencObject{
 }
 impl BluencObject{
     pub fn new(name:&str) -> BluencObject{
+        printraw("adding:", "by");
+        print(&name,"g");
         BluencObject{
             name: name.into(),
             x: 0.0,
@@ -77,8 +79,9 @@ impl BluencObjects{
             unknownobject: BluencObject::new("unknown")
         }
     }
-    pub fn newobject(&mut self,name:&str){
+    pub fn newobject(&mut self,name:&str) -> &mut Self{
         self.storage.insert(name.into(),BluencObject::new(&name));
+        self
     }
     pub fn square(&mut self,engine:&mut blue_engine::Engine,name:&str) -> &mut Self{
         square(
@@ -217,7 +220,7 @@ impl BluencObjects{
         }
 
 
-        //set textures
+        //deletion q
         let vect =&storage.customdata.static_vec_vec_string[Q_DELETE];
         if vect.len()>0{
             for thisobj in vect{

@@ -21,6 +21,7 @@ mod inc{
     pub mod bluenc_animation;
     pub mod bluenc_batchedmodels;
     pub mod bluenc_hud;
+    pub mod bluenc_input;
 }
 pub use inc::bluenc_camera::*;
 pub use inc::bluenc_hud::*;
@@ -29,6 +30,7 @@ pub use inc::bluenc_objects::*;
 pub use inc::nscriptfnbindings::*;
 pub use inc::bluenc_animation::*;
 pub use inc::bluenc_batchedmodels::*;
+pub use inc::bluenc_input::*;
 
 
 //pub use blue_engine_utilities::egui_plugin;
@@ -55,6 +57,13 @@ pub const BNC_SQUARE_Q: usize = 1;
 pub const BNC_ALLANIMS: usize = 12;
 pub const Q_CUSTOMMODELS: usize = 13;
 pub const Q_COLOR: usize = 14;
+pub const Q_TEXTNODES: usize = 15;
+pub const Q_TEXTNODESUPDATES: usize = 16;
+pub const Q_TEXTNODESDELETE: usize = 17;
+pub const Q_IMAGE2D: usize = 18;
+
+pub const Q_TEXTNODESCOLOR: usize = 19;
+pub const Q_EVENTS: usize = 20;
 pub struct BlueNc{
     //name:String,
     keyvec:Vec<blue_engine::KeyCode>,
@@ -296,8 +305,27 @@ impl BlueNc{
             }
             idx +=1;
         }
+        if input.mouse_held(blue_engine::MouseButton::Left){
+            storage.setprop("mousekey", "left", NscriptVar::newstring("key","down".to_string()), &mut self.codeblock);
+        }
+        else{
+            storage.setprop("mousekey", "left", NscriptVar::newstring("key","up".to_string()), &mut self.codeblock);
+        }
+        if input.mouse_held(blue_engine::MouseButton::Right){
+            storage.setprop("mousekey", "right", NscriptVar::newstring("key","down".to_string()), &mut self.codeblock);
+        }
+        else{
+            storage.setprop("mousekey", "right", NscriptVar::newstring("key","up".to_string()), &mut self.codeblock);
+        }
+
+        let mousepos = input.cursor().unwrap_or((0.0,0.0));
+        storage.setprop("mouse", "pos",  NscriptVar::newvec("mousepos",vec!(mousepos.0.to_string(),mousepos.1.to_string())), &mut self.codeblock);
+        let mousepos = input.cursor_diff();
+        storage.setprop("mouse", "diff",  NscriptVar::newvec("mousepos",vec!(mousepos.0.to_string(),mousepos.1.to_string())), &mut self.codeblock);
+        let mousepos = input.scroll_diff();
+        storage.setprop("mouse", "scrolldiff",  NscriptVar::newvec("mousepos",vec!(mousepos.0.to_string(),mousepos.1.to_string())), &mut self.codeblock);
     }
-    // fn update(&mut self, renderer: &mut blue_engine::Renderer,
+    // fn update(&mut self, renderer: &mutblue_engine::Renderer,
     //     window: &blue_engine::Window,
     //     objects: &mut blue_engine::ObjectStorage){
     //
@@ -310,6 +338,7 @@ fn main() {
     //{
     // Initialize the engine with default settings
     let mut nscript = Nscript::new();
+       nscript.insertstructowned("mouse", BlueNcMouse::new());
 for _x in 0..30{
         nscript.storage.customdata.static_vec_vec_string.push(Vec::new());
         nscript.storage.customdata.static_vec_vec_vec_string.push(Vec::new());
@@ -322,31 +351,33 @@ for _x in 0..30{
     //let mut engine = Engine::new().expect("win");
     let mut tmpblock = NscriptCodeBlock::new("__root");
     let mut engine = BlueNc::start_blueengine(&mut tmpblock,&mut nscript.storage);
-    nscript_blueengine_bindings(&mut nscript);
 
-    //let mut textures = BluencTextures::new();
-    // Add a triangle to the screen
-    cube(
-        "cube",
-        ObjectSettings::default(),
-        &mut engine.renderer,
-        &mut engine.objects,
-    )
-        .unwrap();
-    triangle(
-        "triangle",
-        ObjectSettings::default(),
-        &mut engine.renderer,
-        &mut engine.objects,
-    )
-        .unwrap();
-    square(
-        "square",
-        ObjectSettings::default(),
-        &mut engine.renderer,
-        &mut engine.objects,
-    )
-        .unwrap();
+    nscript.storage.setglobal("$windowsize", NscriptVar::newvec("$windowsize", vec!(engine.renderer.config.width.to_string(),engine.renderer.config.height.to_string())));
+    nscript_blueengine_bindings(&mut nscript);
+    //
+    // //let mut textures = BluencTextures::new();
+    // // Add a triangle to the screen
+    // cube(
+    //     "cube",
+    //     ObjectSettings::default(),
+    //     &mut engine.renderer,
+    //     &mut engine.objects,
+    // )
+    //     .unwrap();
+    // triangle(
+    //     "triangle",
+    //     ObjectSettings::default(),
+    //     &mut engine.renderer,
+    //     &mut engine.objects,
+    // )
+    //     .unwrap();
+    // square(
+    //     "square",
+    //     ObjectSettings::default(),
+    //     &mut engine.renderer,
+    //     &mut engine.objects,
+    // )
+    //     .unwrap();
     let mut bnc = BlueNc::new();//
     bnc.init(&mut nscript.storage);
     //let mut bnc_objects = BluencObjects::new();
@@ -398,16 +429,27 @@ for _x in 0..30{
 
 
 
-
             if nscript.coroutines.len() > 0 {
                 // coroutines all run once then the function returns here.
-                nscript.executecoroutines();
                 BluencCamera::queehandler(&mut engine.camera,&mut nscript.storage);
 
                 bnc.objects.q_handler(engine,&mut nscript.storage,&mut bnc.textures);
-bnc.batchedmodels.q_handler(engine, &mut bnc.objects,&mut bnc.textures, &mut nscript.storage);
+                bnc.batchedmodels.q_handler(engine, &mut bnc.objects,&mut bnc.textures, &mut nscript.storage);
                 bnc.animation.q_handler(engine,&mut nscript.storage);
-                bnc.hud.q_handler();
+                bnc.hud.q_handler(engine,&mut bnc.objects, &mut nscript.storage);
+                if nscript.storage.customdata.static_vec_vec_vec_string[Q_EVENTS].len() >0{
+                    for xevent in &nscript.storage.customdata.static_vec_vec_vec_string[Q_EVENTS].clone(){
+                        match xevent[0].as_str(){
+                            "updatewindow" =>{
+                                nscript.storage.setglobal("$windowsize", NscriptVar::newvec("$windowsize", vec!(engine.renderer.config.width.to_string(),engine.renderer.config.height.to_string())));
+                            }
+                            _ =>{
+
+                            }
+
+                        }
+                    }
+                }
                 // obtain the plugin
                 // let egui_plugin = engine
                 //     .signals
@@ -433,7 +475,12 @@ bnc.batchedmodels.q_handler(engine, &mut bnc.objects,&mut bnc.textures, &mut nsc
                 //     },
                 //     &engine.window,
                 // );
+                    // Create a mouse listener
+
+
 bnc.getkeyevents(&mut engine.simple_input, &mut nscript.storage);
+
+                nscript.executecoroutines();
         // if &nscript.storage.getglobal("$testtriangle").stringdata == "go"{
         //
         //             triangle("asd",ObjectSettings::default(),&mut engine.renderer, &mut engine.objects).unwrap();

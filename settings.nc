@@ -1,5 +1,5 @@
 class blueengine{
-    self.vsync = true
+    self.vsync = false
     self.powermode = true
     self.renderwidth = 1024
     self.renderheight = 600
