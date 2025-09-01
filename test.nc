@@ -158,7 +158,7 @@ print("starting nc")
 
 
 
-speed = 0.15
+speed = 0.10
 controllertimer = timerinit()
 spritebase = cat(@scriptdir,"assets/meisje")
 
@@ -402,10 +402,17 @@ batchedmodel_spawnfrombuffer(
 //batchedmodel_modelspawnfrombuffer("testme",thismodel)
 batchedmodel_setposition("oioi",-3.0,1.0,2.0)
 //batchedmodel_setrotation("oioi",2.0,67.0,2.0)
+animtimelow = 400
+animtimemultiply = 2500
 coroutine "gamecontrols" each 26{
-    if key.event == true{
+    
+    //if key.event == true || gamepad.event != ""{
         moved = false
-        if key.d == "down" {
+        if key.d == "down" || gamepad0.dpadright > 0.1 || gamepad0.leftstickx > 0.01{
+            oldspeed = speed
+            if gamepad0.leftstickx > 0.01 {
+                speed = speed * gamepad0.leftstickx
+            }
             //if *mysprite.side != "right"{
                 //spritesetanimation("mysprite","anim_right")
                 if player.gravityside == "down" && player.ontile == true{
@@ -421,8 +428,14 @@ coroutine "gamecontrols" each 26{
                 camera.targetx += speed
                 moved = true
             }
+            spritesetanimationtime(mysprite,subtract(animtimelow,multiply(speed,animtimemultiply)))
+            speed = oldspeed
         }
-        if key.a == "down" {
+        if key.a == "down" || gamepad0.dpadleft > 0.1 || gamepad0.leftstickx < -0.01{
+            oldspeed = speed
+            if gamepad0.leftstickx < -0.01 {
+                speed = speed * replace(gamepad0.leftstickx,"-","")
+            }
             if player.gravityside == "down" && player.ontile == true{
                 mysprite.animate("anim_left")
             }
@@ -435,9 +448,15 @@ coroutine "gamecontrols" each 26{
                 camera.targetx -= speed
                 moved = true
             }
+            spritesetanimationtime(mysprite,subtract(animtimelow,multiply(speed,animtimemultiply)))
+            speed = oldspeed
 
         }
-        if key.w == "down" {
+        if key.w == "down" || gamepad0.dpadup > 0.1 || gamepad0.leftsticky > 0.01{
+            oldspeed = speed
+            if gamepad0.leftsticky > 0.01 {
+                speed = speed * gamepad0.leftsticky
+            }
             if player.gravityside == "down" && player.ontile == true{
                 mysprite.animate("anim_up")
             }
@@ -451,16 +470,21 @@ coroutine "gamecontrols" each 26{
                 mysprite.z -= speed
                 moved = true
             }
-
-
+            spritesetanimationtime(mysprite,subtract(animtimelow,multiply(speed,animtimemultiply)))
+            speed = oldspeed
         }
-        if key.space == "down"{
+        if key.space == "down" || gamepad0.south > 0.1{
+            print("geg!")
             if player.jumping == false {
                 player.jump()
                 moved = true
             }
         }
-        if key.s == "down" {
+        if key.s == "down" || gamepad0.dpaddown > 0.1 || gamepad0.leftsticky < -0.01{
+            oldspeed = speed
+            if gamepad0.leftsticky < -0.01 {
+                speed = speed * replace(gamepad0.leftsticky,"-","")
+            }
             if player.gravityside == "down" && player.ontile == true{
                 mysprite.animate("anim_down")
             }
@@ -474,7 +498,8 @@ coroutine "gamecontrols" each 26{
                 mysprite.z += speed
                 moved = true
             }
-
+            spritesetanimationtime(mysprite,subtract(animtimelow,multiply(speed,animtimemultiply)))
+            speed = oldspeed
         }
         if key.up == "down" {
             camera.offy += speed
@@ -495,32 +520,36 @@ hud.testremove()
         if key.q == "down" {
             // spritesetanimation("oi","anim_left")
             // print(join(oi.anim_right,"+"),"r")
-            mycolor = argb("rgb(47, 35, 98)")
-            mycolor !
-            objectsetcolor("draakje",1.0,0.5,0.2,1.0)
-            batchedmodel_delete("map")
-            print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
+            // mycolor = argb("rgb(47, 35, 98)")
+            // mycolor !
+            // objectsetcolor("draakje",1.0,0.5,0.2,1.0)
+            // batchedmodel_delete("map")
+            // print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
+            gui.close()
         }
         if key.e == "down" {
-            objectsetcolor("draakje",0.1,0.9,1.0,1.0)
+            gui0.open()
+            //gui2.open()
+            //gui3.open()
+            //objectsetcolor("draakje",0.1,0.9,1.0,1.0)
             // spritesetanimation("mysprite","anim_right")
             // print(join(mysprite.anim_right,"+"),"r")
             // print(cat(camera.x," - ",camera.y," - ",camera.z),"bg")
         }
 
-        mysprite.idletimer = timerinit()
+        
 
         //*mysprite2.setposition(camera.x,4.5,0.0)
-    }
+    //}
     //if mousekey.right == "down"{
         cursor.move()
     //}
     //objectsetposition("mysprite",camera.x,1.5,0.0)
     //*mysprite.setposition(camera.x,1.5,mysprite.z)
-
-    //if moved == true {
-        player.setposition(mysprite.x,mysprite.y,mysprite.z)
-    //}
+    player.setposition(mysprite.x,mysprite.y,mysprite.z)
+    if moved == true {
+        mysprite.idletimer = timerinit()
+    }
     if mysprite.y < -20.0 {
         mysprite.x = 10.0
         mysprite.y = 10.0
@@ -529,11 +558,11 @@ hud.testremove()
         player.setposition(mysprite.x,mysprite.y,mysprite.z)
         setcamerapos("camera",mysprite.x,camy,camera.z,mysprite.x,mysprite.y,mysprite.z)
     }
-    if timerdiff(mysprite.idletimer) > 100 {
+    if timerdiff(mysprite.idletimer) > 200 {
         if player.gravityside == "down" && player.ontile == true{
             mysprite.animate(cat("anim_idle",*mysprite.side))
         }
-
+        //mysprite.idletimer = timerinit()
         mysprite.idletimer = timerinit()
     }
 }

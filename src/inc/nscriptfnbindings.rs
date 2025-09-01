@@ -16,6 +16,7 @@ pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
     nscript.insertfn("addsprite",nscriptfn_allspritesadd,"addsprite(sprite_object) // adds to the all sprite index for changes");
     nscript.insertfn("removesprite",nscriptfn_allspritesremove,"removesprite(sprite_object) // removes a sprite from the index");
     nscript.insertfn("spritesetanimation",nscriptfn_spritesetanimation,"spritesetanimation(sprite_object,animationname) // sets a new row of sprites to a object");
+    nscript.insertfn("spritesetanimationtime",nscriptfn_spritesetanimationtime,"spritesetanimation(sprite_object,animationframetime) // sets a custom time between switching frames");
     nscript.insertfn("allsprites",nscriptfn_allsprites,"allsprites() // returns a vector with all sprites");
     nscript.insertfn("batchedmodel_modelspawn",nscriptfn_batchedmodel_modelspawn,"batchedmodel_modelspawn(newobjecid,modelfile) // spawns a batchedmodel from a file");
     nscript.insertfn("batchedmodel_spawntobuffer",nscriptfn_batchedmodel_spawntobuffer,"batchedmodel_spawntobuffer(texture,x,y,z,rx,ry,rz,sx,sy,sz,shape_as_string) // spawns a model to a buffer, shape:cube,triangle,square ,spawn with spawnfrombuffer");

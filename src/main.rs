@@ -61,9 +61,9 @@ pub const Q_TEXTNODES: usize = 15;
 pub const Q_TEXTNODESUPDATES: usize = 16;
 pub const Q_TEXTNODESDELETE: usize = 17;
 pub const Q_IMAGE2D: usize = 18;
-
 pub const Q_TEXTNODESCOLOR: usize = 19;
 pub const Q_EVENTS: usize = 20;
+pub const Q_ANIMATIONTIME: usize = 21;
 pub struct BlueNc{
     //name:String,
     keyvec:Vec<blue_engine::KeyCode>,
@@ -339,6 +339,7 @@ fn main() {
     // Initialize the engine with default settings
     let mut nscript = Nscript::new();
        nscript.insertstructowned("mouse", BlueNcMouse::new());
+    nscript.insertstructowned("gamepad", BlueNcGamePad::new());
 for _x in 0..30{
         nscript.storage.customdata.static_vec_vec_string.push(Vec::new());
         nscript.storage.customdata.static_vec_vec_vec_string.push(Vec::new());

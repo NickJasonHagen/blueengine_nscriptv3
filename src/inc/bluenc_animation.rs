@@ -22,15 +22,23 @@ impl BluencAnimation{
     }
     pub fn q_handler(&mut self, _engine:&mut blue_engine::Engine,storage:&mut NscriptStorage){
         //load textures
-        let anim = storage.customdata.static_vec_vec_vec_string[Q_ANIMATION].clone();
+        let anim = &storage.customdata.static_vec_vec_vec_string[Q_ANIMATION].clone();
         if anim.len()>0{
-            for xitem in &anim{
+            for xitem in anim{
                 let animvec = storage.objectgetprop(&xitem[0], &xitem[1]);
                 self.set(&xitem[0],&animvec.stringvec);
             }
+
             storage.customdata.static_vec_vec_vec_string[Q_ANIMATION] = Vec::new();
         }
 
+        let anim = &storage.customdata.static_vec_vec_vec_string[Q_ANIMATIONTIME];
+        if anim.len()>0{
+            for xitem in anim{
+                self.setanimationtime(&xitem[0],Nstring::i64(&xitem[1]));
+            }
+            storage.customdata.static_vec_vec_vec_string[Q_ANIMATIONTIME] = Vec::new();
+        }
 
         //animation handler
         let vect = &storage.customdata.static_vec_vec_string[BNC_ALLANIMS];
@@ -41,20 +49,14 @@ impl BluencAnimation{
                 topos = qmax.clone()+ 1;
             }
             for x in &vect[self.animationcounter..topos-1]{
-
                 if x != ""{
                     let spriteframe = self.frame(&x);
-//storage.customdata.static_vec_vec_vec_string[Q_SETTEXTURE].push(vec!(x,spriteframe));
                     if spriteframe != ""{
-
-                        //print(&spriteframe,"grey");
                         if storage.customdata.static_vec_vec_vec_string.len() >0{
                             storage.customdata.static_vec_vec_vec_string[Q_SETTEXTURE].push(vec!(x.to_string(),spriteframe));
                         }else{
-storage.customdata.static_vec_vec_vec_string.push(Vec::new());
+                            storage.customdata.static_vec_vec_vec_string.push(Vec::new());
                         }
-                        //let obj = engine.objects.get_mut(x.as_str()).expect("cant find sprite");
-                        //obj.reference_texture(spriteframe);
                     }
 
                     if topos >= qmax-1 {
@@ -67,14 +69,10 @@ storage.customdata.static_vec_vec_vec_string.push(Vec::new());
 
 
     }
-    // pub fn addsprite(&mut self,storage:&mut NscriptStorage){
-    //
-    //     self.index.retain(|x| x.to_owned().into_string() != name);
-    // }
-    // pub fn removesprite(&mut self,storage:&mut NscriptStorage){
-    //
-    //     self..retain(|x| x.to_owned().into_string() != name);
-    // }
+    pub fn setanimationtime(&mut self,squareid: &str,animationtime:i64){
+        self.animation_timers.insert(squareid.to_string(),animationtime);
+    }
+
     pub fn set(&mut self,squareid: &str,animationarray: &Vec<String>){
         if animationarray.len() < 1 {
             //println!("error on the animation system, a given array doesnt meet the requirements, for ID:{}",squareid);
@@ -226,4 +224,11 @@ pub fn nscriptfn_allspritesremove(args:&Vec<&str>,block:&mut NscriptCodeBlock,st
 }
 pub fn nscriptfn_allsprites(_args:&Vec<&str>,_block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
     NscriptVar::newvec(".",storage.customdata.static_vec_vec_string[BNC_ALLANIMS].clone())
+}
+pub fn nscriptfn_spritesetanimationtime(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
+    let spriteid = storage.getargstring(args[0], block);
+    let animationtime = storage.getargstring(args[1], block);
+    storage.customdata.static_vec_vec_vec_string[Q_ANIMATIONTIME].push(vec!(spriteid,split(&animationtime,".")[0].to_string()));
+
+    NscriptVar::new(".")
 }
