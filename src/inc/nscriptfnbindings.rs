@@ -34,6 +34,8 @@ pub fn nscript_blueengine_bindings(nscript: &mut Nscript){
     nscript.insertfn("textnodesetcolor",nscriptfn_textnodesetcolor,"textnodesetcolor(objname,f32:red,f32:green,f32:blue,f32:alpha) //  change the color of a textnode");
     nscript.insertfn("updatewindow",nscriptfn_updatewindow,"updatewindow() //  sets $windowsize as a vec [width,height]");
     nscript.insertfn("pixelstocoords",nscriptfn_pixelstocoords,"pixelstocoords(pos[x,y],screen[width,height]) // takes 2 vectors2's calculates the pixels to coords -1.0 to 1.0 and returns a vec[x,y] with the results");
+    nscript.insertfn("camerasetrotation",nscriptfn_camerasetrotation,"camerasetrotation(f32:pitch,f32:yaw) // sets the camera class rotation pitch yaw and updates the targets, signals the system to update the camera");
+    nscript.insertfn("camerastrafe",nscriptfn_camerastrafe,"camerastrafe(side,range) // side:up/down/left/right/forward/back/fly, range f32, strafes the camera and updates the camera class, signals the system toupdate");
 }
 pub fn nscriptfn_updatewindow(_args:&Vec<&str>,_block:&mut NscriptCodeBlock,storage:&mut NscriptStorage) -> NscriptVar{
     storage.customdata.static_vec_vec_vec_string[Q_EVENTS].push(vec!("updatewindow".to_string()));

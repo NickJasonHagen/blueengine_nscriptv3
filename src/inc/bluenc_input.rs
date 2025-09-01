@@ -73,13 +73,13 @@ impl NscriptStructBinding for BlueNcGamePad {
                             keyeventbool.stringdata = "true".to_string();
                             storage.setprop(&format!("gamepad{}",&isid), &isevents[0].trim().to_lowercase(), NscriptVar::newstring("k",isevents[1].trim().to_string()), &mut block);
                             self.activegamepad.push(Some(id)) ;
-                            print(&getinputs,"g");
-                            print(&isevents[0].trim().to_lowercase(),"pink");
-                            print(&isevents[1].trim(),"grey");
+                            //print(&getinputs,"g");
+                            //print(&isevents[0].trim().to_lowercase(),"pink");
+                            //print(&isevents[1].trim(),"grey");
                         }
-                        else{
-                            print(&getinputs,"r");
-                        }
+                        // else{
+                        //     print(&getinputs,"r");
+                        // }
                     }
                 }
                 storage.setprop("gamepad", "event", keyeventbool, &mut block);

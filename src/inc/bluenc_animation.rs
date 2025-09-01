@@ -163,8 +163,8 @@ pub fn nscriptfn_loadsprite(args:&Vec<&str>,block:&mut NscriptCodeBlock,storage:
         }
     }
     let file = Nfile::read(&format!("{}/sprite.cfg", dir));
-storage.classes.insert(dir.to_string(),NscriptClass::new(&dir));
-    print(&dir,"orange");
+    storage.classes.insert(dir.to_string(),NscriptClass::new(&dir));
+    //print(&dir,"orange");
     for xline in split(&file,NC_LINE_ENDING){
         let propname = split(xline," = ")[0].trim();
         if propname != ""{

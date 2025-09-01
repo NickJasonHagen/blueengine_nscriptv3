@@ -404,6 +404,7 @@ batchedmodel_setposition("oioi",-3.0,1.0,2.0)
 //batchedmodel_setrotation("oioi",2.0,67.0,2.0)
 animtimelow = 400
 animtimemultiply = 2500
+
 coroutine "gamecontrols" each 26{
     
     //if key.event == true || gamepad.event != ""{
@@ -546,25 +547,29 @@ hud.testremove()
     //}
     //objectsetposition("mysprite",camera.x,1.5,0.0)
     //*mysprite.setposition(camera.x,1.5,mysprite.z)
-    player.setposition(mysprite.x,mysprite.y,mysprite.z)
-    if moved == true {
-        mysprite.idletimer = timerinit()
-    }
-    if mysprite.y < -20.0 {
-        mysprite.x = 10.0
-        mysprite.y = 10.0
-        mysprite.z = 3.0 
-        camera.z = mysprite.z + 3.0
-        player.setposition(mysprite.x,mysprite.y,mysprite.z)
-        setcamerapos("camera",mysprite.x,camy,camera.z,mysprite.x,mysprite.y,mysprite.z)
-    }
-    if timerdiff(mysprite.idletimer) > 200 {
-        if player.gravityside == "down" && player.ontile == true{
-            mysprite.animate(cat("anim_idle",*mysprite.side))
+    //player.setposition(mysprite.x,mysprite.y,mysprite.z)
+    if 1 == 2 {
+        if moved == true {
+            mysprite.idletimer = timerinit()
+            player.setposition(mysprite.x,mysprite.y,mysprite.z)
         }
-        //mysprite.idletimer = timerinit()
-        mysprite.idletimer = timerinit()
+        if mysprite.y < -20.0 {
+            mysprite.x = 10.0
+            mysprite.y = 10.0
+            mysprite.z = 3.0 
+            camera.z = mysprite.z + 3.0
+            player.setposition(mysprite.x,mysprite.y,mysprite.z)
+            setcamerapos("camera",mysprite.x,camy,camera.z,mysprite.x,mysprite.y,mysprite.z)
+        }
+        if timerdiff(mysprite.idletimer) > 200 {
+            if player.gravityside == "down" && player.ontile == true{
+                mysprite.animate(cat("anim_idle",*mysprite.side))
+            }
+            //mysprite.idletimer = timerinit()
+            mysprite.idletimer = timerinit()
+        }
     }
+
 }
 // xup = -50.0
 // bloodimg = loadtexture("assets/200.gif")
@@ -610,6 +615,51 @@ coroutine "fpscounter"{
         fpscounter = 0
         $fpsmsg = cat("fps:",fps," uptime: ",uptimeinmin,"min")
         fpstimer = timerinit()
+    }
+}
+strafespeed = 0.01
+rotatespeed = 0.1
+coroutine "strafe"{
+
+    //strafes
+    if gamepad1.leftsticky > 0.1{
+      camerastrafe("forward",strafespeed)  
+    }
+    if gamepad1.leftsticky < -0.1{
+      camerastrafe("back",strafespeed)  
+    }
+    if gamepad1.leftstickx > 0.1{
+      camerastrafe("right",strafespeed)  
+    }
+    if gamepad1.leftstickx < -0.1{
+      camerastrafe("left",strafespeed)  
+    }
+    if gamepad1.lefttrigger > 0.1{
+      camerastrafe("down",strafespeed)  
+    }
+    if gamepad1.righttrigger > 0.1{
+      camerastrafe("up",strafespeed)  
+    }
+    //rotate 
+    if gamepad1.rightstickx > 0.1{
+        rotatespeed = replace(gamepad1.rightstickx,"-","") / 3.0
+        camera.yaw -= rotatespeed
+        camerasetrotation(camera.pitch,camera.yaw) 
+    }
+    if gamepad1.rightstickx < -0.1{
+        rotatespeed = replace(gamepad1.rightstickx,"-","") / 3.0
+        camera.yaw += rotatespeed
+        camerasetrotation(camera.pitch,camera.yaw)   
+    }
+    if gamepad1.rightsticky > 0.1{
+        rotatespeed = replace(gamepad1.rightsticky,"-","") / 3.0
+        camera.pitch += rotatespeed
+        camerasetrotation(camera.pitch,camera.yaw)   
+    }
+    if gamepad1.rightsticky < -0.1{
+        rotatespeed = replace(gamepad1.rightsticky,"-","") / 3.0
+        camera.pitch -= rotatespeed
+        camerasetrotation(camera.pitch,camera.yaw)     
     }
 }
 // coroutine "game2" each 10000{
